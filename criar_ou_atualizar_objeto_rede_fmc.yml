@@ -1,0 +1,27 @@
+---
+- name: "Automação para obter o UUID do domínio e criar ou atualizar um objeto de rede no Cisco FMC"
+  hosts: all
+  connection: httpapi
+  vars:
+    network_name: "ansible-test-network"
+    network_description: "Upserted network object"
+    network_value: "192.23.23.0/24"
+    network_type: "networkobject"
+
+  tasks:
+    - name: "Obter UUID do domínio do Cisco FMC"
+      cisco.fmcansible.fmc_configuration:
+        operation: getAllDomain
+        register_as: domain
+
+    - name: "Criar ou atualizar o objeto de rede '{{ network_name }}' com a sub-rede '{{ network_value }}'"
+      cisco.fmcansible.fmc_configuration:
+        operation: upsertNetworkObject
+        path_params:
+          domainUUID: '{{ domain[0].uuid }}'
+        data:
+          name: "{{ network_name }}"
+          description: "{{ network_description }}"
+          value: "{{ network_value }}"
+          type: "{{ network_type }}"
+        register_as: upsertedTestObj

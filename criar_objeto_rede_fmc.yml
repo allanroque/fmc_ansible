@@ -1,0 +1,23 @@
+---
+- name: "Automação para obter o UUID do domínio e criar um objeto de rede no Cisco FMC"
+  hosts: all
+  connection: httpapi
+  vars:
+    network_name: net15
+    network_value: 10.10.30.0/24
+
+  tasks:
+    - name: "Obter UUID do domínio do Cisco FMC para uso em próximas automações"
+      cisco.fmcansible.fmc_configuration:
+        operation: getAllDomain
+        register_as: domain
+
+    - name: "Criar um objeto de rede '{{ network_name }}' com a sub-rede '{{ network_value }}'"
+      cisco.fmcansible.fmc_configuration:
+        operation: createMultipleNetworkObject
+        data:
+          name: "{{ network_name }}"
+          value: "{{ network_value }}"
+          type: Network
+        path_params:
+          domainUUID: '{{ domain[0].uuid }}'

@@ -1,0 +1,33 @@
+---
+- name: "Automação para liberar o acesso da rede 'Internal_Network' no Cisco FMC"
+  hosts: all
+  connection: httpapi
+  tasks:
+    - name: "Obter UUID do domínio do Cisco FMC"
+      cisco.fmcansible.fmc_configuration:
+        operation: getAllDomain
+        register_as: domain
+
+    - name: "Obter política de acesso 'NGFW-Access-Policy25'"
+      cisco.fmcansible.fmc_configuration:
+        operation: getAllAccessPolicy
+        path_params:
+          domainUUID: '{{ domain[0].uuid }}'
+        filters:
+          name: NGFW-Access-Policy25
+        register_as: accesspolicy
+
+    - name: "Criar uma regra de acesso permitindo tráfego da rede 'Internal_Network'"
+      cisco.fmcansible.fmc_configuration:
+        operation: upsertAccessRule
+        data:
+          name: Allow_Internal_Network_Access
+          type: accessrule
+          sourceNetworks:
+            objects:
+              - id: "02CAADB0-3A99-0ed3-0000-012884902233"
+                type: "Network"
+          action: ALLOW
+        path_params:
+          containerUUID: '{{ accesspolicy[0].id }}'
+          domainUUID: '{{ domain[0].uuid }}'
