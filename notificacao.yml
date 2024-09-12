@@ -6,7 +6,7 @@
   tasks:
     - name: "Definir a data atual"
       set_fact:
-        data_acao: "{{ lookup('pipe', 'date +%d-%m-%Y %H:%M:%S') }}"  # Define a data atual no formato desejado
+        data_acao: "12/09/2024"  # Define a data atual no formato desejado
 
     - name: "Exibir notificação informando que a ação foi realizada nos firewalls"
       debug:
