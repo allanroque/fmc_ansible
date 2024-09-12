@@ -10,7 +10,7 @@
         msg: |
           Prezados,
 
-          Informamos que uma ação foi realizada nos equipamentos de firewall na data de hoje: {{ data_acao }}.
+          Informamos que uma ação foi realizada nos equipamentos de firewall na data de hoje
           As alterações já foram aplicadas e os equipamentos estão operando conforme esperado.
 
           Atenciosamente,
