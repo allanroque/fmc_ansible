@@ -21,3 +21,10 @@
           defaultAction: {'action': '{{ default_action }}'}
         path_params:
           domainUUID: "{{ domain[0].uuid }}"
+
+# infos das register e validar se tem uma variavel
+#    - name: Set Job ID number
+#      set_stats:
+#        data:
+#          ac_job_id: "{{ awx_job_id }}"
+#
