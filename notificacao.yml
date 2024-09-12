@@ -1,0 +1,32 @@
+---
+- name: "Notificação de Ação Realizada nos Equipamentos de Firewall"
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: "Definir a data atual"
+      set_fact:
+        data_acao: "{{ lookup('pipe', 'date +%d-%m-%Y %H:%M:%S') }}"  # Define a data atual no formato desejado
+
+    - name: "Enviar notificação por e-mail informando que a ação foi realizada nos firewalls"
+      mail:
+        host: "smtp.seudominio.com"  # Servidor de SMTP
+        port: 587
+        username: "usuario@seudominio.com"
+        password: "xxxxxxxxx"
+        to: "equipe@seudominio.com"
+        subject: "Notificação: Ação realizada nos Equipamentos de Firewall"
+        body: |
+          Prezados,
+
+          Informamos que uma ação foi realizada nos equipamentos de firewall na data de hoje: {{ data_acao }}.
+          As alterações já foram aplicadas e os equipamentos estão operando conforme esperado.
+
+          Equipamentos Afetados: {{ lista_equipamentos }}
+
+          Atenciosamente,
+          Equipe de Redes
+      ignore_errors: yes  # Ignorar erros caso o envio do e-mail falhe
+
+      vars:
+        lista_equipamentos: "Firewall 1, Firewall 2, Firewall 3"
