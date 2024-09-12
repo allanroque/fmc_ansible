@@ -1,0 +1,50 @@
+---
+- name: Automate SNOW - Change Request Create
+  hosts: localhost
+  connection: local
+  vars:
+    sn_short_description: "{{ job_short_description | default('Change Open Via Ansible') }} Security"
+    sn_description: |
+      "A automação foi executada com sucesso para criar ou atualizar uma regra de tráfego no FMC.
+
+      Detalhes da Automação:
+      - Nome da Regra: {{ rule_name }}
+      - Rede de Origem: {{ source_network_name }} ({{ source_network_value }})
+      - Rede de Destino: {{ destination_network_name }} ({{ destination_network_value }})
+      - Ação: {{ action }}
+      - Política de Acesso: {{ policy_name }} (ID: {{ policy_id }})
+      - UUID do Domínio: {{ domainUUID }}
+      - ID do Job: {{ awx_job_id }}
+
+      Essa automação configurou ou atualizou uma regra de firewall entre as redes de origem e destino especificadas com base na política de acesso fornecida."
+    sn_impact: "low"
+    sn_urgency: "low"
+    sn_category: "network"
+  collections:
+    - servicenow.itsm
+
+  tasks:
+    - name: Create change request
+      servicenow.itsm.change_request:
+        state: new
+        instance:
+          host: "{{ snow_instance }}"
+          username: "{{ snow_username }}"
+          password: "{{ snow_password }}"
+        short_description: "{{ sn_short_description }}"
+        description: "{{ sn_description }}"
+        impact: "{{ sn_impact }}"
+        urgency: "{{ sn_urgency }}"
+        category: "{{ sn_category }}"
+      register: new_change_request
+
+    - set_fact:
+        sn_change_request_number: "{{ new_change_request.record.number }}"
+
+    - debug:
+        var: new_change_request.record.number
+
+    - name: Set change request number
+      set_stats:
+        data:
+          sn_change_request_number: "{{ new_change_request.record.number }}"
