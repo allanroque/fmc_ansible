@@ -1,0 +1,87 @@
+---
+- name: "Criar ou Atualizar Regra de Bloqueio ou Liberação de Tráfego"
+  hosts: all
+  connection: httpapi
+  gather_facts: no
+  vars:
+    rule_name: "Regra_Trafego"  # Nome da regra
+    source_network_name: "Rede_Origem"  # Nome da rede de origem
+    source_network_value: "192.168.1.0/24"  # Valor da rede de origem (sub-rede)
+    destination_network_name: "Rede_Destino"  # Nome da rede de destino
+    destination_network_value: "10.10.10.0/24"  # Valor da rede de destino (sub-rede)
+    action: "ALLOW"  # Ação: ALLOW (liberar) ou BLOCK (bloquear)
+    policy_name: "Policy_Automation"  # Nome da política de acesso
+    policy_id: "02CAADB0-3A99-0ed3-0000-012884901924"  # ID da política de acesso
+    domainUUID: "e276abec-e0f2-11e3-8169-6d9ed49b625f"  # UUID do domínio FMC
+
+  tasks:
+    - name: "Verificar se a rede de origem já existe"
+      cisco.fmcansible.fmc_configuration:
+        operation: getAllNetworkObject
+        path_params:
+          domainUUID: "{{ domainUUID }}"
+        filters:
+          name: "{{ source_network_name }}"
+      register: source_network_check
+
+    - name: "Criar a rede de origem se não existir"
+      cisco.fmcansible.fmc_configuration:
+        operation: createMultipleNetworkObject
+        path_params:
+          domainUUID: "{{ domainUUID }}"
+        data:
+          name: "{{ source_network_name }}"
+          value: "{{ source_network_value }}"
+          type: "Network"
+      when: source_network_check.response | length == 0
+      register: created_source_network
+
+    - name: "Usar a rede de origem existente ou recém-criada"
+      set_fact:
+        source_network_id: "{{ source_network_check.response[0].id | default(created_source_network.response.id) }}"
+
+    - name: "Verificar se a rede de destino já existe"
+      cisco.fmcansible.fmc_configuration:
+        operation: getAllNetworkObject
+        path_params:
+          domainUUID: "{{ domainUUID }}"
+        filters:
+          name: "{{ destination_network_name }}"
+      register: destination_network_check
+
+    - name: "Criar a rede de destino se não existir"
+      cisco.fmcansible.fmc_configuration:
+        operation: createMultipleNetworkObject
+        path_params:
+          domainUUID: "{{ domainUUID }}"
+        data:
+          name: "{{ destination_network_name }}"
+          value: "{{ destination_network_value }}"
+          type: "Network"
+      when: destination_network_check.response | length == 0
+      register: created_destination_network
+
+    - name: "Usar a rede de destino existente ou recém-criada"
+      set_fact:
+        destination_network_id: "{{ destination_network_check.response[0].id | default(created_destination_network.response.id) }}"
+
+    - name: "Criar ou atualizar regra de tráfego entre origem e destino"
+      cisco.fmcansible.fmc_configuration:
+        operation: upsertAccessRule
+        data:
+          name: "{{ rule_name }}"
+          type: accessrule
+          sourceNetworks:
+            objects:
+              - id: "{{ source_network_id }}"
+                type: "Network"
+          destinationNetworks:
+            objects:
+              - id: "{{ destination_network_id }}"
+                type: "Network"
+          action: "{{ action }}"  # Pode ser ALLOW ou BLOCK
+        path_params:
+          containerUUID: "{{ policy_id }}"
+          domainUUID: "{{ domainUUID }}"
+      when: source_network_id is defined and destination_network_id is defined
+
