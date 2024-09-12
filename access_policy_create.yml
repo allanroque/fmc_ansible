@@ -1,19 +1,23 @@
-- hosts: all
+---
+- name: "Automação para criar uma política de acesso com ação padrão parametrizada no Cisco FMC"
+  hosts: all
   connection: httpapi
   vars:
-    accesspolicy_name: NGFW-Access-Policy25
+    accesspolicy_name: "AccessPolicy1"
+    default_action: "TRUST"  # Variável para o defaultAction (pode ser TRUST, ALLOW, BLOCK, etc.)
+
   tasks:
-    - name: Get Domain UUID
+    - name: "Obter UUID do domínio do Cisco FMC"
       cisco.fmcansible.fmc_configuration:
         operation: getAllDomain
         register_as: domain
 
-    - name: Allow traffic by default
+    - name: "Criar política de acesso '{{ accesspolicy_name }}' com ação padrão '{{ default_action }}'"
       cisco.fmcansible.fmc_configuration:
         operation: "createAccessPolicy"
         data:
-            type: "AccessPolicy"
-            name: "{{accesspolicy_name | default('AccessPolicy1') }}"
-            defaultAction: {'action': 'TRUST'}
+          type: "AccessPolicy"
+          name: "{{ accesspolicy_name }}"
+          defaultAction: {'action': '{{ default_action }}'}
         path_params:
-            domainUUID: "{{ domain[0].uuid }}"
+          domainUUID: "{{ domain[0].uuid }}"
