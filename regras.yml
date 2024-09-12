@@ -13,6 +13,7 @@
     policy_name: "Policy_Automation"  # Nome da política de acesso
     policy_id: "02CAADB0-3A99-0ed3-0000-012884901924"  # ID da política de acesso
     domainUUID: "e276abec-e0f2-11e3-8169-6d9ed49b625f"  # UUID do domínio FMC
+    awx_job_id: "test"
 
   tasks:
     - name: "Verificar se a rede de origem já existe"
@@ -85,3 +86,16 @@
           domainUUID: "{{ domainUUID }}"
       when: source_network_id is defined and destination_network_id is defined
 
+    - name: "Registrar estatísticas para uso no workflow"
+      set_stats:
+        data:
+          rule_name: "{{ rule_name }}"
+          source_network_name: "{{ source_network_name }}"
+          source_network_value: "{{ source_network_value }}"
+          destination_network_name: "{{ destination_network_name }}"
+          destination_network_value: "{{ destination_network_value }}"
+          action: "{{ action }}"
+          policy_name: "{{ policy_name }}"
+          policy_id: "{{ policy_id }}"
+          domainUUID: "{{ domainUUID }}"
+          ac_job_id: "{{ awx_job_id }}"
